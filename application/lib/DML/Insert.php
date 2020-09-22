@@ -50,26 +50,20 @@ class Insert extends Instruction
 
         $columns = array_values($data);
 
-       
         foreach ($columns as $colum) {
-            if (is_scalar($colum)) {
-                $columnTransformed[] = $colum;
-            }
             if (is_string($colum)) {
-                $columnTransformed[] = (new StringType($colum))->transform();
-            }
-            if (is_bool($colum)) {
-                $columnTransformed[] = (new BooleanType($colum))->transform();
-            }
-            if (is_null($colum)) {
-                $columnTransformed[] = (new NullType($colum))->transform();
+                $columnsTransformed[] = (new StringType($colum))->transform();
+            } elseif (is_bool($colum)) {
+                $columnsTransformed[] = (new BooleanType($colum))->transform();
+            } elseif (is_null($colum)) {
+                $columnsTransformed[] = (new NullType($colum))->transform();
+            } else {
+                $columnsTransformed[] = $colum;
             }
         }
-        var_dump($columnsTransformed);
-        
+
         return $columnsTransformed;
     }
-
     private function createLabels(array $data): array
     {
         return array_map(function ($column) {
@@ -79,16 +73,10 @@ class Insert extends Instruction
 
     public function getInstruction(): string
     {
-        var_dump($this->values['labeled']);
-        var_dump($this->values['raw']);
-        die;
-        return "
+        $columns = implode(", ", $this->columns[0]);
+        $values = implode(", ", $this->values['labeled']);
 
-            INSERT INTO {$this->getTable()}
-            (.". implode(", ", $this->values['labeled']) .".)
-            VALUES
-            (.". implode(", ", $this->values['labeled']) .".)
-        ";
+        return sprintf("INSERT INTO %s (%s) VALUES (%s)", $this->table, $columns, $values);
     }
 }
 
